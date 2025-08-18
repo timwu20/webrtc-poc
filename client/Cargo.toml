@@ -4,18 +4,14 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-anyhow = "1.0.86"
-futures = "0.3.30"
-rand = "0.8"
-tracing = "0.1.41"
-tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+anyhow = { workspace = true }
+futures = { workspace = true }
+rand = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
 
-axum = "0.7.5"
-libp2p = { version = "0.56.0", features = [ "ed25519", "macros", "ping", "tokio"] }
-libp2p-webrtc = { version = "0.9.0-alpha.1", features = ["tokio"] }
-rust-embed = { version = "8.4.0", features = ["include-exclude", "interpolate-folder-path"] }
-tokio = { version = "1.38", default-features = false }
-tokio-util = { version = "0.7", features = ["compat"] }
-tower = "0.4"
-tower-http = { version = "0.5.2", features = ["cors"] }
-mime_guess = "2.0.4"
+axum = { workspace = true }
+libp2p = { workspace = true }
+libp2p-webrtc = { workspace = true } 
+tokio = { workspace = true }
+tokio-util = { workspace = true }

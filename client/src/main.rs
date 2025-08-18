@@ -31,7 +31,7 @@ async fn main() -> anyhow::Result<()> {
     let listen_addr = "/ip4/0.0.0.0/udp/0/webrtc-direct".parse()?;
     swarm.listen_on(listen_addr)?;
 
-    let libp2p_endpoint = "/ip4/192.168.68.107/udp/57726/webrtc-direct/certhash/uEiAsAoytqsWSomhAtgctB8PX5zPQ7paLlYcG84V3pNTKxw/p2p/12D3KooWQ1EEY3ous1rx43mZgWjjfDtE8ysg18Suex6ywPmcfMpV";
+    let libp2p_endpoint = "/ip4/192.168.68.107/udp/61037/webrtc-direct/certhash/uEiDzv9tyMv739dMGXVGGYXSHaSdAi4voYHnx9mh231zBsQ/p2p/12D3KooWKGByMUM4n4QVjzdRzSQdQjp6jQ578CirizbfsZAF7Jhe";
 
     let addr = libp2p_endpoint.parse::<Multiaddr>()?;
     tracing::info!("Dialing {addr}");
