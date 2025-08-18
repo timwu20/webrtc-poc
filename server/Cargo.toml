@@ -12,6 +12,7 @@ tracing-subscriber = { workspace = true }
 
 axum = { workspace = true }
 libp2p = { workspace = true }
-libp2p-webrtc = { workspace = true } 
+libp2p-webrtc = { workspace = true }
+libp2p-perf = { workspace = true }
 tokio = { workspace = true }
 tokio-util = { workspace = true }

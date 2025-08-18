@@ -19,6 +19,8 @@ async fn main() -> anyhow::Result<()> {
         .with_env_filter("info")
         .init();
 
+    let behav = libp2p_perf::server::Behaviour::new();
+
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
         .with_other_transport(|id_keys| {
@@ -28,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
             )
             .map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
         })?
-        .with_behaviour(|_| ping::Behaviour::default())?
+        .with_behaviour(|_| behav)?
         .with_swarm_config(|cfg| cfg.with_idle_connection_timeout(Duration::from_secs(u64::MAX)))
         .build();
 
@@ -64,17 +66,20 @@ async fn main() -> anyhow::Result<()> {
             swarm_event = swarm.next() => {
                 if let Some(swarm_event) = swarm_event {
                     match swarm_event {
-                        SwarmEvent::Behaviour(ping::Event { result: Err(e), .. }) => {
-                            tracing::error!("Ping failed: {:?}", e);
+                        // SwarmEvent::Behaviour(ping::Event { result: Err(e), .. }) => {
+                        //     tracing::error!("Ping failed: {:?}", e);
 
-                            break;
-                        }
-                        SwarmEvent::Behaviour(ping::Event {
-                            peer,
-                            result: Ok(rtt),
-                            ..
-                        }) => {
-                            tracing::info!("Ping successful: RTT: {rtt:?}, from {peer}");
+                        //     break;
+                        // }
+                        // SwarmEvent::Behaviour(ping::Event {
+                        //     peer,
+                        //     result: Ok(rtt),
+                        //     ..
+                        // }) => {
+                        //     tracing::info!("Ping successful: RTT: {rtt:?}, from {peer}");
+                        // }
+                        SwarmEvent::Behaviour(libp2p_perf::server::Event { remote_peer_id, stats }) => {
+                            tracing::info!("Finished run for peer {remote_peer_id}: {stats:?}");
                         }
                         SwarmEvent::ConnectionClosed {
                             cause: Some(cause), ..

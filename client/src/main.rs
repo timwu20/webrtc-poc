@@ -8,12 +8,15 @@ use libp2p::{
 use libp2p_webrtc as webrtc;
 use rand::thread_rng;
 use std::time::Duration;
+use libp2p_perf::{client, server, Final, Intermediate, Run, RunParams, RunUpdate};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter("info")
         .init();
+
+     let behav = libp2p_perf::client::Behaviour::new();
 
     let mut swarm = libp2p::SwarmBuilder::with_new_identity()
         .with_tokio()
@@ -24,41 +27,87 @@ async fn main() -> anyhow::Result<()> {
             )
             .map(|(peer_id, conn), _| (peer_id, StreamMuxerBox::new(conn))))
         })?
-        .with_behaviour(|_| ping::Behaviour::default())?
+        .with_behaviour(|_| behav)?
         .with_swarm_config(|cfg| cfg.with_idle_connection_timeout(Duration::from_secs(u64::MAX)))
         .build();
 
     let listen_addr = "/ip4/0.0.0.0/udp/0/webrtc-direct".parse()?;
     swarm.listen_on(listen_addr)?;
 
-    let libp2p_endpoint = "/ip4/192.168.68.107/udp/61037/webrtc-direct/certhash/uEiDzv9tyMv739dMGXVGGYXSHaSdAi4voYHnx9mh231zBsQ/p2p/12D3KooWKGByMUM4n4QVjzdRzSQdQjp6jQ578CirizbfsZAF7Jhe";
+    let libp2p_endpoint = "/ip4/192.168.68.107/udp/58214/webrtc-direct/certhash/uEiD85hZXNtu7UbexCzSMPzAzpLv2c--R6STG3mV5LUy4Hw/p2p/12D3KooWGcxd5Vr6vkd41Cd4rNErsJE94Wm7sBN2GXCPVxKzqwrr";
+    
+    tokio::spawn(async move {
+        let addr = libp2p_endpoint.parse::<Multiaddr>()?;
+        tracing::info!("Dialing {addr}");
+        swarm.dial(addr)?;
 
-    let addr = libp2p_endpoint.parse::<Multiaddr>()?;
-    tracing::info!("Dialing {addr}");
-    swarm.dial(addr)?;
+        
+        let server_peer_id = loop {
+            match swarm.next().await.unwrap() {
+                SwarmEvent::ConnectionEstablished { peer_id, .. } => break peer_id,
+                SwarmEvent::OutgoingConnectionError { peer_id, error, .. } => {
+                    panic!("Failed to dial {libp2p_endpoint}: {error:?} for peer {peer_id:?}");
+                }
+                SwarmEvent::NewListenAddr { .. } => {
+                    continue;
+                },
+                e => panic!("{e:?}"),
+            };
+        };
 
-    loop {
-        match swarm.next().await.unwrap() {
-            SwarmEvent::Behaviour(ping::Event { result: Err(e), .. }) => {
-                tracing::error!("Ping failed: {:?}", e);
+        let params = libp2p_perf::RunParams {
+            to_send: 1024 * 8,
+            to_receive: 1024 * 8,
+        };
 
-                break;
-            }
-            SwarmEvent::Behaviour(ping::Event {
-                peer,
-                result: Ok(rtt),
-                ..
-            }) => {
-                tracing::info!("Ping successful: RTT: {rtt:?}, from {peer}");
-            }
-            SwarmEvent::ConnectionClosed {
-                cause: Some(cause), ..
-            } => {
-                tracing::info!("Connection closed due to: {:?}", cause);
-            }
-            evt => tracing::info!("Swarm event: {:?}", evt),
-        }
-    }
+        swarm.behaviour_mut().perf(server_peer_id, params)?;
+
+        let duration = loop {
+            match swarm.next().await.unwrap() {
+                SwarmEvent::Behaviour(client::Event {
+                    id: _,
+                    result: Ok(RunUpdate::Intermediate(progressed)),
+                }) => {
+                    tracing::info!("{progressed}");
+
+                    let Intermediate {
+                        duration,
+                        sent,
+                        received,
+                    } = progressed;
+
+                    // println!(
+                    //     "{}",
+                    //     serde_json::to_string(&BenchmarkResult {
+                    //         r#type: "intermediate".to_string(),
+                    //         time_seconds: duration.as_secs_f64(),
+                    //         upload_bytes: sent,
+                    //         download_bytes: received,
+                    //     })
+                    //     .unwrap()
+                    // );
+                    tracing::info!(
+                        "Progress: {}/{} bytes sent, {}/{} bytes received",
+                        sent,
+                        params.to_send,
+                        received,
+                        params.to_receive
+                    );
+                }
+                SwarmEvent::Behaviour(client::Event {
+                    id: _,
+                    result: Ok(RunUpdate::Final(Final { duration })),
+                }) => break duration,
+                e => panic!("{e:?}"),
+            };
+        };
+
+        let run = Run { params, duration };
+
+        tracing::info!("{run}");
+        
+        anyhow::Ok(())
+    }).await??;
 
     Ok(())
 }
