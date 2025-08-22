@@ -2,13 +2,12 @@ use futures::StreamExt;
 use libp2p::{
     core::{muxing::StreamMuxerBox, Transport},
     multiaddr::Multiaddr,
-    ping,
     swarm::SwarmEvent,
 };
 use libp2p_webrtc as webrtc;
 use rand::thread_rng;
 use std::time::Duration;
-use libp2p_perf::{client, server, Final, Intermediate, Run, RunParams, RunUpdate};
+use libp2p_perf::{client, Final, Intermediate, Run, RunUpdate};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -33,8 +32,9 @@ async fn main() -> anyhow::Result<()> {
 
     let listen_addr = "/ip4/0.0.0.0/udp/0/webrtc-direct".parse()?;
     swarm.listen_on(listen_addr)?;
-
-    let libp2p_endpoint = "/ip4/192.168.68.107/udp/58214/webrtc-direct/certhash/uEiD85hZXNtu7UbexCzSMPzAzpLv2c--R6STG3mV5LUy4Hw/p2p/12D3KooWGcxd5Vr6vkd41Cd4rNErsJE94Wm7sBN2GXCPVxKzqwrr";
+    
+    // NOTE: this needs to be updated to the server address
+    let libp2p_endpoint = "/ip4/192.168.68.102/udp/61764/webrtc-direct/certhash/uEiAQ5II_EGmdtakPyZhQUQRvOCzANrUG9HDHp2REO5dMIQ/p2p/12D3KooWJShgeFnsDfognRojeKy4geczbW1koVLcx3xKGDPRofRY";
     
     tokio::spawn(async move {
         let addr = libp2p_endpoint.parse::<Multiaddr>()?;
@@ -56,8 +56,8 @@ async fn main() -> anyhow::Result<()> {
         };
 
         let params = libp2p_perf::RunParams {
-            to_send: 1024 * 8,
-            to_receive: 1024 * 8,
+            to_send: 1024 * 7,
+            to_receive: 1024 * 7,
         };
 
         swarm.behaviour_mut().perf(server_peer_id, params)?;
@@ -71,21 +71,11 @@ async fn main() -> anyhow::Result<()> {
                     tracing::info!("{progressed}");
 
                     let Intermediate {
-                        duration,
+                        duration: _,
                         sent,
                         received,
                     } = progressed;
 
-                    // println!(
-                    //     "{}",
-                    //     serde_json::to_string(&BenchmarkResult {
-                    //         r#type: "intermediate".to_string(),
-                    //         time_seconds: duration.as_secs_f64(),
-                    //         upload_bytes: sent,
-                    //         download_bytes: received,
-                    //     })
-                    //     .unwrap()
-                    // );
                     tracing::info!(
                         "Progress: {}/{} bytes sent, {}/{} bytes received",
                         sent,

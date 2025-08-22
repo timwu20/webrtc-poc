@@ -1,12 +1,9 @@
-// #![allow(non_upper_case_globals)]
-
 use std::net::Ipv4Addr;
 
 use futures::StreamExt;
 use libp2p::{
     core::{muxing::StreamMuxerBox, Transport},
     multiaddr::{Multiaddr, Protocol},
-    ping,
     swarm::SwarmEvent,
 };
 use libp2p_webrtc as webrtc;
@@ -66,18 +63,6 @@ async fn main() -> anyhow::Result<()> {
             swarm_event = swarm.next() => {
                 if let Some(swarm_event) = swarm_event {
                     match swarm_event {
-                        // SwarmEvent::Behaviour(ping::Event { result: Err(e), .. }) => {
-                        //     tracing::error!("Ping failed: {:?}", e);
-
-                        //     break;
-                        // }
-                        // SwarmEvent::Behaviour(ping::Event {
-                        //     peer,
-                        //     result: Ok(rtt),
-                        //     ..
-                        // }) => {
-                        //     tracing::info!("Ping successful: RTT: {rtt:?}, from {peer}");
-                        // }
                         SwarmEvent::Behaviour(libp2p_perf::server::Event { remote_peer_id, stats }) => {
                             tracing::info!("Finished run for peer {remote_peer_id}: {stats:?}");
                         }

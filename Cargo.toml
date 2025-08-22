@@ -16,5 +16,7 @@ axum = "0.7.5"
 libp2p = { git = "https://github.com/libp2p/rust-libp2p.git", tag="v0.56.0", features = ["ed25519", "macros", "ping", "tokio"] }
 libp2p-webrtc = { git = "https://github.com/libp2p/rust-libp2p.git", tag="v0.56.0", features = ["tokio"] }
 libp2p-perf = { git = "https://github.com/libp2p/rust-libp2p.git", tag="v0.56.0" }
+libp2p-yamux = { git = "https://github.com/libp2p/rust-libp2p.git", tag="v0.56.0" }
+libp2p-noise = { git = "https://github.com/libp2p/rust-libp2p.git", tag="v0.56.0" }
 tokio = { version = "1.38", default-features = false }
 tokio-util = { version = "0.7", features = ["compat"] }
